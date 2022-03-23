@@ -1,4 +1,4 @@
-FROM debian
+FROM debian:bullseye
 
 LABEL maintainer="Tranko"
 
@@ -14,19 +14,33 @@ RUN apt install -y \
     python3 \
     curl \
     libsdl2-2.0-0 \
-    nano
-RUN apt install -y \
+    nano \
     libc6:armhf \
     libncurses5:armhf \
-    libstdc++6:armhf
+    libstdc++6:armhf \
+    libssl1.0.0:armhf
 
 # Install the box86 to emulate x86 platform (for steamcmd cliente)
 WORKDIR /root
 RUN git clone https://github.com/ptitSeb/box86
+RUN git clone https://github.com/ptitSeb/box64
+
+## Box86 installation
 WORKDIR /root/box86/build
-RUN cmake .. -DRPI4ARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
-RUN make -j4; 
+RUN cmake .. -DSD845=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
+RUN make -j8;
 RUN make install
+
+## Box64 installation
+WORKDIR /root/box64/build
+RUN cmake .. -DSD845=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
+RUN make -j8; 
+RUN make install
+
+# Cleaning the image
+WORKDIR /root
+RUN rm -r /root/box86
+RUN rm -r /root/box64
 
 # Install steamcmd and download the valheim server:
 WORKDIR /root/steam
@@ -34,23 +48,10 @@ RUN curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.t
 # RUN export DEBUGGER="/usr/local/bin/box86"
 ENV BOX86_DYNAREC "0"
 ENV DEBUGGER "/usr/local/bin/box86"
-RUN ./steamcmd.sh +@sSteamCmdForcePlatformType linux +login anonymous +force_install_dir /root/valheim_server +app_update 896660 validate +quit
-
-## Box64 installation
-WORKDIR /root
-RUN git clone https://github.com/ptitSeb/box64
-WORKDIR /root/box64/build
-RUN cmake .. -DRPI4ARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
-RUN make -j4; 
-RUN make install
-
-# Cleaning the image
-RUN apt-get purge -y wget
-RUN rm -r /root/box86
-RUN rm -r /root/box64
+RUN ./steamcmd.sh +@sSteamCmdForcePlatformType linux +login anonymous +force_install_dir /root/svends +app_update 276060 validate +quit
 
 # Specific for run Valheim server
-EXPOSE 2456-2457/udp
+EXPOSE 27015/udp
 WORKDIR /root
 COPY bootstrap .
 CMD ["/root/bootstrap"]
