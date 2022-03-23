@@ -12,41 +12,8 @@ getparams() {
     #   -batchmode: bacic param for the valheim documentation. MANDATORY.
     #   -public: used the value of the param if defined, if not it will be a private server (0) MANDATORY.
     #   -port: used the value of the param if defined, if not it will use standard port (2456) MANDATORY.
-    params="-nographics -batchmode"
-    params="$params -public ${PUBLIC:-0}"
-    params="$params -port ${PORT:-2456}"
-
-    # Specific params values, if they are not defined, return error:
-    ## Name of the server MANDATORY:
-    if [[ -z "${NAME}" ]]; then
-        echo "The variable NAME is not defined. Please, fix and run again."
-        return -1
-    else
-        params="$params -name ${NAME}"
-    fi
-
-    ## Name of the world MANDATORY
-    if [[ -z "${WORLD}" ]]; then
-        echo "The variable WORLD is not defined. Fixed and run again."
-        return -1
-    else
-        params="$params -world ${WORLD}"
-    fi
-
-    ## Save folder for the data (if not defined can run, but the world will be saved on the container, bad idea):
-    if [[ -z "${SAVEDIR}" ]]; then
-        echo "The variable SAVEDIR is not defined. Fixed and run again."
-        return -1
-    else
-        params="$params -savedir ${SAVEDIR}"
-    fi
-
-    ## Password for the server, if not defined, no password = free access:
-    if [[ -z "${PASSWORD}" ]]; then
-        echo "The variable PASSWORD is not defined. Running WITHOUT password."
-    else
-        params="$params -password ${PASSWORD}"
-    fi
+    params="-console +map _server_start +maxplayers 12"
+    params="$params -port ${PORT:-27015}"
 }
 
 # Main function
@@ -62,19 +29,19 @@ main() {
 
     # Part of the standar code startup of the server:
     export templdpath="${LD_LIBRARY_PATH}"
-    export LD_LIBRARY_PATH=./linux64:"${LD_LIBRARY_PATH}"
+    export LD_LIBRARY_PATH=./linux:./linux32:"${LD_LIBRARY_PATH}"
     export SteamAppId=${STEAMAPPID}
     
     # Move to the execution folder
-    cd /root/valheim_server
+    cd /root/svends
 
     ## Checking the final parameters to use:
     echo "##############################"
-    echo "Final Valheim parameters to run: $params"
+    echo "Final SvenDS parameters to run: $params"
     echo "##############################"
 
     # Starting the server:
-    box64 ./valheim_server.x86_64 $params
+    box86 ./SvenDS $params
 }
 
 getparams
